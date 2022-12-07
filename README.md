@@ -1,2 +1,2 @@
 # UsersList
-Test task. Based on Jetpack Compose frameworkand MVVM pattern
+Test task. Based on Jetpack Compose framework and MVVM pattern
