@@ -187,16 +187,13 @@ private fun UserListItem(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
             .padding(
                 start = 16.dp,
                 end = 16.dp,
                 top = 16.dp
             )
-            .background(
-                color = LightGray,
-                shape = RoundedCornerShape(12.dp)
-            )
+            .clip(shape = RoundedCornerShape(16.dp))
+            .background(color = LightGray)
             .clickable(onClick = onNameClick)
     ) {
         Text(
