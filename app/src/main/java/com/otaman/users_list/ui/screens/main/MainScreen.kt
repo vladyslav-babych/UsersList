@@ -69,6 +69,9 @@ private fun MainScreenContent(
     ) -> Unit
 ) {
     val context = LocalContext.current
+    var count by rememberSaveable {
+        mutableStateOf(0)
+    }
 
     Scaffold(
         topBar = {
@@ -99,12 +102,9 @@ private fun MainScreenContent(
                                 )
                             }
                         }
-                        var count by rememberSaveable {
-                            mutableStateOf(true)
-                        }
                         LaunchedEffect(key1 = count) {
-                            if(count) Toast.makeText(context, usersProfilesState.message, Toast.LENGTH_SHORT).show()
-                            count = false
+                            if(count == 0) Toast.makeText(context, usersProfilesState.message, Toast.LENGTH_SHORT).show()
+                            count = 1
                         }
                     }
                     is UserProfileState.Loading -> {
@@ -193,7 +193,10 @@ private fun UserListItem(
                 end = 16.dp,
                 top = 16.dp
             )
-            .background(color = LightGray, shape = RoundedCornerShape(12.dp))
+            .background(
+                color = LightGray,
+                shape = RoundedCornerShape(12.dp)
+            )
             .clickable(onClick = onNameClick)
     ) {
         Text(
