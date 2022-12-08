@@ -83,28 +83,36 @@ private fun MainScreenContent(
             is UsersIdsState.UsersIdsData -> {
                 when(usersProfilesState) {
                     is UserProfileState.UserProfileData -> {
-                        LazyColumn(
-                            modifier = Modifier.padding(padding)
-                        ) {
-                            items(usersProfilesState.userProfileData) { userProfileData ->
-                                val data = userProfileData.data
-                                UserListItem(
-                                    userName = data.firstName,
-                                    onNameClick = {
-                                        onNameClick(
-                                            data.firstName,
-                                            data.lastName,
-                                            data.age.toString(),
-                                            data.gender,
-                                            data.country
-                                        )
-                                    }
-                                )
+                        if(usersProfilesState.userProfileData.isNotEmpty()) {
+                            LazyColumn(
+                                modifier = Modifier.padding(padding)
+                            ) {
+                                items(usersProfilesState.userProfileData) { userProfileData ->
+                                    val data = userProfileData.data
+                                    UserListItem(
+                                        userName = data.firstName,
+                                        onNameClick = {
+                                            onNameClick(
+                                                data.firstName,
+                                                data.lastName,
+                                                data.age.toString(),
+                                                data.gender,
+                                                data.country
+                                            )
+                                        }
+                                    )
+                                }
+                            }
+                            LaunchedEffect(key1 = count) {
+                                if(count == 0) Toast.makeText(context, usersProfilesState.message, Toast.LENGTH_SHORT).show()
+                                count = 1
                             }
                         }
-                        LaunchedEffect(key1 = count) {
-                            if(count == 0) Toast.makeText(context, usersProfilesState.message, Toast.LENGTH_SHORT).show()
-                            count = 1
+                        else {
+                            ErrorView(
+                                errorMessage = usersProfilesState.message,
+                                onRetryClick = onRetryClick
+                            )
                         }
                     }
                     is UserProfileState.Loading -> {
