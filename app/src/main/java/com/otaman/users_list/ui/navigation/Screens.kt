@@ -4,11 +4,11 @@ sealed class Screen(val route: String) {
     object Main: Screen(route = "main_screen")
     object Profile: Screen(route = "profile_screen/{firstName}/{lastName}/{age}/{gender}/{country}") {
         fun buildRoute(
-            firstName: String = "Dwayne",
-            lastName: String = "Johnson",
-            age: String = "50",
-            gender: String = "Male",
-            country: String = "USA"
+            firstName: String,
+            lastName: String,
+            age: String,
+            gender: String,
+            country: String
         ): String {
             return "profile_screen/$firstName/$lastName/$age/$gender/$country"
         }

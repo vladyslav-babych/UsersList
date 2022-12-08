@@ -84,33 +84,28 @@ fun SetupNavGraph(
             arguments = listOf(
                 navArgument(name = FIRST_NAME_KEY) {
                     type = NavType.StringType
-                    defaultValue = "Dwayne"
                     nullable = false
                 },
                 navArgument(name = LAST_NAME_KEY) {
                     type = NavType.StringType
-                    defaultValue = "Johnson"
                     nullable = false
                 },
                 navArgument(name = AGE_KEY) {
                     type = NavType.StringType
-                    defaultValue = "50"
                     nullable = false
                 },
                 navArgument(name = GENDER_KEY) {
                     type = NavType.StringType
-                    defaultValue = "Male"
                     nullable = false
                 },
                 navArgument(name = COUNTRY_KEY) {
                     type = NavType.StringType
-                    defaultValue = "Dwayne"
                     nullable = false
                 }
             )
         ) {
-            val firstNameArg = it.arguments?.getString(FIRST_NAME_KEY) ?: "Dwayne"
-            val lastNameArg = it.arguments?.getString(LAST_NAME_KEY) ?: "Johnson"
+            val firstNameArg = it.arguments?.getString(FIRST_NAME_KEY) ?: "John"
+            val lastNameArg = it.arguments?.getString(LAST_NAME_KEY) ?: "Smith"
             val ageArg = it.arguments?.getString(AGE_KEY) ?: "50"
             val genderArg = it.arguments?.getString(GENDER_KEY) ?: "Male"
             val countryArg = it.arguments?.getString(COUNTRY_KEY) ?: "USA"

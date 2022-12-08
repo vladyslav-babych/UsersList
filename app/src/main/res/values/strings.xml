@@ -4,7 +4,13 @@
     // MainScreen
     <string name="users">Users</string>
     <string name="get_ids_error">Failed to get users \n Error: %s</string>
+    <string name="get_profiles_error">Failed to get users profiles</string>
     <string name="try_again">Click here to try again</string>
+    <plurals name="failed_get_profiles_count">
+        <item quantity="zero">Successfully loaded all profiles</item>
+        <item quantity="one">Failed to load %s profile</item>
+        <item quantity="other">Failed to load %s profiles</item>
+    </plurals>
 
     // ProfileScreen
     <string name="first_name">First name</string>

@@ -8,8 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.otaman.users_list.domain.models.UserProfile
 import com.otaman.users_list.domain.repository.UsersRepository
 import com.otaman.users_list.domain.util.Resource
-import com.otaman.users_list.ui.states.UserProfileState
-import com.otaman.users_list.ui.states.UsersIdsState
+import com.otaman.users_list.ui.states.UsersState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -19,64 +18,41 @@ class MainScreenViewModel @Inject constructor(
     private val repository: UsersRepository
 ): ViewModel() {
 
-    private val _usersIdsState: MutableState<UsersIdsState> = mutableStateOf(UsersIdsState.Loading)
-    val usersIdsState: State<UsersIdsState> = _usersIdsState
-
-    private val _userProfileState: MutableState<UserProfileState> = mutableStateOf(UserProfileState.Loading)
-    val userProfileState: State<UserProfileState> = _userProfileState
+    private val _usersState: MutableState<UsersState> = mutableStateOf(UsersState.Loading)
+    val usersState: State<UsersState> = _usersState
 
     init {
         getUsersIds()
     }
 
-    fun updateUsers() {
-        getUsersIds()
-    }
-
-    private fun getUsersIds() = viewModelScope.launch {
+    fun getUsersIds() = viewModelScope.launch {
+        _usersState.value = UsersState.Loading
         when(val result = repository.getUsersIds()) {
             is Resource.Success -> {
-                _usersIdsState.value = result.data.let { data ->
-                    getUserProfileById(data.data)
-                    UsersIdsState.UsersIdsData(usersIdsData = data)
-                }
+                getUsersProfilesByIds(result.data.ids)
             }
             is Resource.Error -> {
-                _usersIdsState.value = result.message.let { msg ->
-                    UsersIdsState.Error(message = msg)
-                }
+                _usersState.value = UsersState.Error(message = result.message)
             }
         }
     }
 
-    private fun getUserProfileById(usersIds: List<String>) = viewModelScope.launch {
+    private fun getUsersProfilesByIds(usersIds: List<String>) = viewModelScope.launch {
 
-        val profilesResource: MutableList<Resource<UserProfile>> = mutableListOf()
         val profiles: MutableList<UserProfile> = mutableListOf()
-        val profileLoadFailCount = mutableStateOf(0)
+        var profileLoadFailCount = 0
 
         usersIds.forEach { id ->
-            profilesResource.add(repository.getUserProfileById(id))
-        }
-
-        profilesResource.forEach { profileResource ->
-            val textToShow =
-                if(profileLoadFailCount.value == 1) "Failed to load ${profileLoadFailCount.value} profile"
-                else "Failed to load ${profileLoadFailCount.value} profiles"
-
-            when(profileResource) {
+            when(val result = repository.getUserProfileById(id)) {
                 is Resource.Success -> {
-                    _userProfileState.value = profileResource.data.let { data ->
-                        if(data.status == "success") profiles.add(data)
-                        UserProfileState.UserProfileData(userProfileData = profiles, message = textToShow)
-                    }
+                    profiles.add(result.data)
                 }
                 is Resource.Error -> {
-                    profileResource.message.let {
-                        profileLoadFailCount.value += 1
-                    }
+                    profileLoadFailCount++
                 }
             }
         }
+
+        _usersState.value = UsersState.UsersProfilesData(profiles, profileLoadFailCount)
     }
 }

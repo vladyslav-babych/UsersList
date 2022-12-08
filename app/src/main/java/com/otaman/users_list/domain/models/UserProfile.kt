@@ -2,7 +2,7 @@ package com.otaman.users_list.domain.models
 
 data class UserProfile(
     val status: String,
-    val data: UserData
+    val profileData: UserData
 )
 
 data class UserData(

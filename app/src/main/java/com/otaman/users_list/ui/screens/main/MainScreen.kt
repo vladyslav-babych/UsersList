@@ -23,8 +23,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import com.otaman.users_list.R
-import com.otaman.users_list.ui.states.UserProfileState
-import com.otaman.users_list.ui.states.UsersIdsState
+import com.otaman.users_list.ui.states.UsersState
 import com.otaman.users_list.ui.theme.LightGray
 import com.otaman.users_list.ui.theme.UsersListTheme
 import com.otaman.users_list.ui.viewmodels.MainScreenViewModel
@@ -40,25 +39,20 @@ fun MainScreen(
         country: String
     ) -> Unit
 ) {
-    val usersIdsState by remember {
-        viewModel.usersIdsState
-    }
-    val usersProfilesState by remember {
-        viewModel.userProfileState
+    val usersState by remember {
+        viewModel.usersState
     }
 
     MainScreenContent(
-        usersIdsState = usersIdsState,
-        usersProfilesState = usersProfilesState,
-        onRetryClick = { viewModel.updateUsers() },
+        usersState = usersState,
+        onRetryClick = { viewModel.getUsersIds() },
         onNameClick = onNameClick
     )
 }
 
 @Composable
 private fun MainScreenContent(
-    usersIdsState: UsersIdsState,
-    usersProfilesState: UserProfileState,
+    usersState: UsersState,
     onRetryClick: () -> Unit,
     onNameClick: (
         firstName: String,
@@ -69,6 +63,7 @@ private fun MainScreenContent(
     ) -> Unit
 ) {
     val context = LocalContext.current
+    val resources = LocalContext.current.resources
     var count by rememberSaveable {
         mutableStateOf(0)
     }
@@ -78,58 +73,59 @@ private fun MainScreenContent(
             AppBar()
         }
     ) { padding ->
-
-        when(usersIdsState) {
-            is UsersIdsState.UsersIdsData -> {
-                when(usersProfilesState) {
-                    is UserProfileState.UserProfileData -> {
-                        if(usersProfilesState.userProfileData.isNotEmpty()) {
-                            LazyColumn(
-                                modifier = Modifier.padding(padding)
-                            ) {
-                                items(usersProfilesState.userProfileData) { userProfileData ->
-                                    val data = userProfileData.data
-                                    UserListItem(
-                                        userName = data.firstName,
-                                        onNameClick = {
-                                            onNameClick(
-                                                data.firstName,
-                                                data.lastName,
-                                                data.age.toString(),
-                                                data.gender,
-                                                data.country
-                                            )
-                                        }
-                                    )
-                                }
+        when (usersState) {
+            is UsersState.UsersProfilesData -> {
+                when {
+                    usersState.usersProfilesData.isNotEmpty() -> {
+                        LazyColumn(
+                            modifier = Modifier.padding(padding)
+                        ) {
+                            items(usersState.usersProfilesData) { userProfileData ->
+                                val data = userProfileData.profileData
+                                UserListItem(
+                                    userName = data.firstName,
+                                    onNameClick = {
+                                        onNameClick(
+                                            data.firstName,
+                                            data.lastName,
+                                            data.age.toString(),
+                                            data.gender,
+                                            data.country
+                                        )
+                                    }
+                                )
                             }
-                            LaunchedEffect(key1 = count) {
-                                if(count == 0) Toast.makeText(context, usersProfilesState.message, Toast.LENGTH_SHORT).show()
-                                count = 1
-                            }
-                        }
-                        else {
-                            ErrorView(
-                                errorMessage = usersProfilesState.message,
-                                onRetryClick = onRetryClick
-                            )
                         }
                     }
-                    is UserProfileState.Loading -> {
-                        LoadingView()
+                    else -> {
+                        ErrorView(
+                            errorMessage = stringResource(id = R.string.get_profiles_error),
+                            onRetryClick = onRetryClick
+                        )
                     }
                 }
+                LaunchedEffect(key1 = count) {
+                    if (count == 0) {
+                        Toast.makeText(
+                            context,
+                            resources.getQuantityString(
+                                R.plurals.failed_get_profiles_count,
+                                usersState.failCount,
+                                usersState.failCount
+                            ),
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                    count = 1
+                }
             }
-            is UsersIdsState.Error -> {
+            is UsersState.Error -> {
                 ErrorView(
-                    errorMessage = stringResource(
-                        id = R.string.get_ids_error,
-                        usersIdsState.message
-                    ),
+                    errorMessage = stringResource(id = R.string.get_ids_error, usersState.message),
                     onRetryClick = onRetryClick
                 )
             }
-            is UsersIdsState.Loading -> {
+            is UsersState.Loading -> {
                 LoadingView()
             }
         }

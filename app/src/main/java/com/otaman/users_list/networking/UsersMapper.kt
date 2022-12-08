@@ -10,14 +10,14 @@ import com.otaman.users_list.networking.responses.UsersIdsResponse
 fun UsersIdsResponse.toUsersIds(): UserId {
     return UserId(
         status = status,
-        data = data
+        ids = data
     )
 }
 
 fun UserProfileResponse.toUserProfile(): UserProfile {
     return UserProfile(
         status = status,
-        data = data.toUserData()
+        profileData = data.toUserData()
     )
 }
 
