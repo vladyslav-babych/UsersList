@@ -1,5 +1,7 @@
 package com.otaman.users_list.ui.navigation
 
+import android.net.Uri
+import android.os.Build
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInHorizontally
@@ -7,18 +9,17 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.runtime.Composable
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
-import androidx.navigation.NavType
 import androidx.navigation.navArgument
 import com.google.accompanist.navigation.animation.AnimatedNavHost
 import com.google.accompanist.navigation.animation.composable
-import com.otaman.users_list.ui.navigation.Screen.Profile.AGE_KEY
-import com.otaman.users_list.ui.navigation.Screen.Profile.COUNTRY_KEY
-import com.otaman.users_list.ui.navigation.Screen.Profile.FIRST_NAME_KEY
-import com.otaman.users_list.ui.navigation.Screen.Profile.GENDER_KEY
-import com.otaman.users_list.ui.navigation.Screen.Profile.LAST_NAME_KEY
+import com.otaman.users_list.domain.models.UserData
+import com.otaman.users_list.ui.navigation.Screen.Profile.PROFILE_KEY
 import com.otaman.users_list.ui.screens.main.MainScreen
 import com.otaman.users_list.ui.screens.profile.ProfileScreen
 import com.otaman.users_list.ui.viewmodels.MainScreenViewModel
+import com.squareup.moshi.JsonAdapter
+import com.squareup.moshi.Moshi
+import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 
 @ExperimentalAnimationApi
 @Composable
@@ -65,16 +66,18 @@ fun SetupNavGraph(
             route = Screen.Main.route
         ) {
             val viewModel: MainScreenViewModel = hiltViewModel()
+            val moshi: Moshi = Moshi.Builder()
+                .add(KotlinJsonAdapterFactory())
+                .build()
+            val jsonAdapter: JsonAdapter<UserData> = moshi.adapter(UserData::class.java)
 
             MainScreen(
                 viewModel = viewModel,
-                onNameClick = { firstName, lastName, age, gender, country ->
+                onNameClick = { profile ->
+                    val json = Uri.encode(jsonAdapter.toJson(profile))
+
                     navController.navigate(Screen.Profile.buildRoute(
-                        firstName = firstName,
-                        lastName = lastName,
-                        age = age,
-                        gender = gender,
-                        country = country
+                        profile = json
                     ))
                 }
             )
@@ -82,40 +85,23 @@ fun SetupNavGraph(
         composable(
             route = Screen.Profile.route,
             arguments = listOf(
-                navArgument(name = FIRST_NAME_KEY) {
-                    type = NavType.StringType
-                    nullable = false
-                },
-                navArgument(name = LAST_NAME_KEY) {
-                    type = NavType.StringType
-                    nullable = false
-                },
-                navArgument(name = AGE_KEY) {
-                    type = NavType.StringType
-                    nullable = false
-                },
-                navArgument(name = GENDER_KEY) {
-                    type = NavType.StringType
-                    nullable = false
-                },
-                navArgument(name = COUNTRY_KEY) {
-                    type = NavType.StringType
+                navArgument(name = PROFILE_KEY) {
+                    type = ProfileType()
                     nullable = false
                 }
             )
         ) {
-            val firstNameArg = it.arguments?.getString(FIRST_NAME_KEY) ?: "John"
-            val lastNameArg = it.arguments?.getString(LAST_NAME_KEY) ?: "Smith"
-            val ageArg = it.arguments?.getString(AGE_KEY) ?: "50"
-            val genderArg = it.arguments?.getString(GENDER_KEY) ?: "Male"
-            val countryArg = it.arguments?.getString(COUNTRY_KEY) ?: "USA"
+            val profileArg = checkNotNull(
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    it.arguments?.getParcelable(PROFILE_KEY, UserData::class.java)
+                } else {
+                    @Suppress("DEPRECATION")
+                    it.arguments?.getParcelable(PROFILE_KEY)
+                }
+            )
 
             ProfileScreen(
-                firstName = firstNameArg,
-                lastName = lastNameArg,
-                age = ageArg,
-                gender = genderArg,
-                country = countryArg,
+                profile = profileArg,
                 onBackClick = {
                     navController.popBackStack()
                 }

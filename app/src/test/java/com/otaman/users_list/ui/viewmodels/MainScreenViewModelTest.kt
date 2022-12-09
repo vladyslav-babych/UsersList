@@ -6,12 +6,11 @@ import com.otaman.users_list.domain.models.UserId
 import com.otaman.users_list.domain.models.UserProfile
 import com.otaman.users_list.domain.repository.UsersRepository
 import com.otaman.users_list.domain.util.Resource
-import com.otaman.users_list.ui.states.UserProfileState
-import com.otaman.users_list.ui.states.UsersIdsState
+import com.otaman.users_list.ui.states.UsersState
 import io.mockk.MockKAnnotations
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.impl.annotations.MockK
-import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -35,33 +34,45 @@ class MainScreenViewModelTest {
     private lateinit var idResult: Resource<UserId>
 
     private lateinit var profileModel: UserProfile
-    private lateinit var profileData: UserData
-    private lateinit var profileResult: Resource<UserProfile>
+    private lateinit var profileData: List<UserData>
+    private lateinit var profileSuccessResult: Resource<UserProfile>
+    private lateinit var profileErrorResult: Resource<UserProfile>
 
     @Before
     fun setUp() {
         MockKAnnotations.init(this)
 
-        idModel = UserId("success", listOf())
+        idModel = UserId("success", listOf("test_id1", "test_idle_id"))
         idResult = Resource.Success(idModel)
 
-        profileData = mockk()
-        profileModel = UserProfile("success", profileData)
-        profileResult = Resource.Success(profileModel)
+        profileData = listOf(
+            UserData(
+                id = "test_id1",
+                firstName = "TestFirstName",
+                lastName = "TestLastName",
+                age = 19,
+                gender = "Male",
+                country = "Canada"
+            )
+        )
+        profileModel = UserProfile("success", profileData[0])
+        profileSuccessResult = Resource.Success(profileModel)
+        profileErrorResult = Resource.Error("Error")
 
         coEvery { repository.getUsersIds() } returns idResult
-        coEvery { repository.getUserProfileById("") } returns profileResult
+        coEvery { repository.getUserProfileById("test_id1") } returns profileSuccessResult
+        coEvery { repository.getUserProfileById("test_idle_id") } returns profileErrorResult
 
         viewModel = MainScreenViewModel(repository)
     }
 
     @Test
-    fun getUsersIds_success() = runTest {
+    fun getUsersIdsAndUserProfile_success() = runTest {
 
         advanceUntilIdle()
-        val expectedState = UsersIdsState.UsersIdsData(idModel)
 
-        assertThat(viewModel.usersIdsState.value, equalTo(expectedState))
+        coVerify { repository.getUsersIds() }
+        coVerify { repository.getUserProfileById("test_id1") }
     }
 
     @Test
@@ -70,22 +81,24 @@ class MainScreenViewModelTest {
 
         coEvery { repository.getUsersIds() } returns idResult
         advanceUntilIdle()
-        val expectedState = UsersIdsState.Error("Error")
+        val expectedState = UsersState.Error("Error")
 
-        assertThat(viewModel.usersIdsState.value, equalTo(expectedState))
+        assertThat(viewModel.usersState.value, equalTo(expectedState))
     }
 
     @Test
     fun getUsersIds_loading() = runTest {
-        val expectedState = UsersIdsState.Loading
+        val expectedState = UsersState.Loading
 
-        assertThat(viewModel.usersIdsState.value, equalTo(expectedState))
+        assertThat(viewModel.usersState.value, equalTo(expectedState))
     }
 
     @Test
-    fun getUsersProfile_loading() = runTest {
-        val expectedState = UserProfileState.Loading
+    fun getUserProfile_success() = runTest {
 
-        assertThat(viewModel.userProfileState.value, equalTo(expectedState))
+        advanceUntilIdle()
+        val expectedState = UsersState.UsersProfilesData(listOf(profileModel), 1)
+
+        assertThat(viewModel.usersState.value, equalTo(expectedState))
     }
 }

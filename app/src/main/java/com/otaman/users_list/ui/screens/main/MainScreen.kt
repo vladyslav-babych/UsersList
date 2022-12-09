@@ -23,6 +23,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import com.otaman.users_list.R
+import com.otaman.users_list.domain.models.UserData
+import com.otaman.users_list.domain.models.UserProfile
 import com.otaman.users_list.ui.states.UsersState
 import com.otaman.users_list.ui.theme.LightGray
 import com.otaman.users_list.ui.theme.UsersListTheme
@@ -31,13 +33,7 @@ import com.otaman.users_list.ui.viewmodels.MainScreenViewModel
 @Composable
 fun MainScreen(
     viewModel: MainScreenViewModel,
-    onNameClick: (
-        firstName: String,
-        lastName: String,
-        age: String,
-        gender: String,
-        country: String
-    ) -> Unit
+    onNameClick: (profile: UserData) -> Unit
 ) {
     val usersState by remember {
         viewModel.usersState
@@ -54,18 +50,11 @@ fun MainScreen(
 private fun MainScreenContent(
     usersState: UsersState,
     onRetryClick: () -> Unit,
-    onNameClick: (
-        firstName: String,
-        lastName: String,
-        age: String,
-        gender: String,
-        country: String
-    ) -> Unit
+    onNameClick: (profile: UserData) -> Unit
 ) {
     val context = LocalContext.current
-    val resources = LocalContext.current.resources
-    var count by rememberSaveable {
-        mutableStateOf(0)
+    var isWarningShown by rememberSaveable {
+        mutableStateOf(true)
     }
 
     Scaffold(
@@ -75,40 +64,24 @@ private fun MainScreenContent(
     ) { padding ->
         when (usersState) {
             is UsersState.UsersProfilesData -> {
-                when {
-                    usersState.usersProfilesData.isNotEmpty() -> {
-                        LazyColumn(
-                            modifier = Modifier.padding(padding)
-                        ) {
-                            items(usersState.usersProfilesData) { userProfileData ->
-                                val data = userProfileData.profileData
-                                UserListItem(
-                                    userName = data.firstName,
-                                    onNameClick = {
-                                        onNameClick(
-                                            data.firstName,
-                                            data.lastName,
-                                            data.age.toString(),
-                                            data.gender,
-                                            data.country
-                                        )
-                                    }
-                                )
-                            }
-                        }
-                    }
-                    else -> {
-                        ErrorView(
-                            errorMessage = stringResource(id = R.string.get_profiles_error),
-                            onRetryClick = onRetryClick
-                        )
-                    }
+                if (usersState.usersProfilesData.isNotEmpty()) {
+                    SuccessView(
+                        usersList = usersState.usersProfilesData,
+                        padding = padding,
+                        onNameClick = onNameClick
+                    )
                 }
-                LaunchedEffect(key1 = count) {
-                    if (count == 0) {
+                else {
+                    ErrorView(
+                        errorMessage = stringResource(id = R.string.get_profiles_error),
+                        onRetryClick = onRetryClick
+                    )
+                }
+                LaunchedEffect(key1 = isWarningShown) {
+                    if (isWarningShown) {
                         Toast.makeText(
                             context,
-                            resources.getQuantityString(
+                            context.resources.getQuantityString(
                                 R.plurals.failed_get_profiles_count,
                                 usersState.failCount,
                                 usersState.failCount
@@ -116,7 +89,7 @@ private fun MainScreenContent(
                             Toast.LENGTH_SHORT
                         ).show()
                     }
-                    count = 1
+                    isWarningShown = false
                 }
             }
             is UsersState.Error -> {
@@ -128,6 +101,27 @@ private fun MainScreenContent(
             is UsersState.Loading -> {
                 LoadingView()
             }
+        }
+    }
+}
+
+@Composable
+private fun SuccessView(
+    usersList: List<UserProfile>,
+    padding: PaddingValues,
+    onNameClick: (profile: UserData) -> Unit
+) {
+    LazyColumn(
+        modifier = Modifier.padding(padding)
+    ) {
+        items(usersList) { userProfileData ->
+            val data = userProfileData.profileData
+            UserListItem(
+                userName = data.firstName,
+                onNameClick = {
+                    onNameClick(data)
+                }
+            )
         }
     }
 }

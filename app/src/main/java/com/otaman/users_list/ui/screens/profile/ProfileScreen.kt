@@ -23,22 +23,19 @@ import androidx.compose.ui.unit.dp
 import com.otaman.users_list.ui.theme.LightGray
 import com.otaman.users_list.ui.theme.UsersListTheme
 import com.otaman.users_list.R
+import com.otaman.users_list.domain.models.UserData
 
 @Composable
 fun ProfileScreen(
-    firstName: String,
-    lastName: String,
-    age: String,
-    gender: String,
-    country: String,
+    profile: UserData,
     onBackClick: () -> Unit
 ) {
     ProfileScreenContent(
-        firstName = firstName,
-        lastName = lastName,
-        age = age,
-        gender = gender,
-        country = country,
+        firstName = profile.firstName,
+        lastName = profile.lastName,
+        age = profile.age.toString(),
+        gender = profile.gender,
+        country = profile.country,
         onBackClick = onBackClick
     )
 }
@@ -156,11 +153,13 @@ private fun ProfileField(
 private fun ProfileScreenPreview() {
     UsersListTheme {
         ProfileScreen(
-            firstName = "firstName",
-            lastName = "lastName",
-            age = "age",
-            gender = "gender",
-            country = "country",
+            profile = UserData(
+                id = "id",
+                firstName = "firstName",
+                lastName = "lastName",
+                age = 19,
+                gender = "gender",
+                country = "country"),
             onBackClick = {}
         )
     }
