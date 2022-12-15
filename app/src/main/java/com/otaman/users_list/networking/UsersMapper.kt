@@ -10,7 +10,7 @@ import com.otaman.users_list.networking.responses.UsersIdsResponse
 fun UsersIdsResponse.toUsersIds(): UserId {
     return UserId(
         status = status,
-        ids = data
+        ids = ids
     )
 }
 

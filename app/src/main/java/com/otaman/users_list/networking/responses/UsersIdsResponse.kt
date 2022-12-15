@@ -4,5 +4,5 @@ import com.squareup.moshi.Json
 
 data class UsersIdsResponse(
     @Json(name = "status") val status: String,
-    @Json(name = "data") val data: List<String>
+    @Json(name = "data") val ids: List<String>
 )
